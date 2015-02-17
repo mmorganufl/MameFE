@@ -51,52 +51,41 @@ class MainWindow(QtWidgets.QWidget):
         self._romSource = GenreRomSource(self._config)
         self._numRows = self._romSource.getNumRows(); 
         
-               
-        self._headers = self._romSource.getHeaders(0, 3)
-        topCount = self._romSource.getNumRoms(self._headers[0])        
-        # Create the first two rows
-        topRow = TileRowWidget(2, 3, topCount, self._romSource, self._headers[0])
-        topRow.setGeometry(QtCore.QRect(0, bannerHeight + self._rowSpacing, width, self._rowHeight))
-        topRow.setParent(self)
-        topRow.initialize()
+              
+        self._headers = self._romSource.getHeaders(0, 50)        
+        numRows = min(3, len(self._headers))
+                
+        for i in range(0, numRows):
+            count = self._romSource.getNumRoms(self._headers[i])
+            row = TileRowWidget(1, 3, count, self._romSource, self._headers[i])
+            row.setGeometry(QtCore.QRect(0, bannerHeight + self._rowSpacing * i + self._rowHeight * i, width, self._rowHeight))
+            row.setParent(self)
+            row.initialize()
+            row.showFrame(i == 0)
+            row.lower()
+            self._rows.append(row)
         
-        secondCount = self._romSource.getNumRoms(self._headers[1])    
-        secondRow = TileRowWidget(1, 3, secondCount, self._romSource, self._headers[1])
-        secondRow.setGeometry(QtCore.QRect(0, bannerHeight + self._rowSpacing * 2 + self._rowHeight, width, self._rowHeight))
-        secondRow.setParent(self)
-        secondRow.initialize()        
-        
-        topRow.showFrame(True)
-        secondRow.showFrame(False)
-        
-        topRow.lower()
-        secondRow.lower()
         self._bannerLabel.raise_()
-        
-        self._rows.append(topRow)
-        self._rows.append(secondRow)               
+                       
    
     def keyPressEvent(self, e):
         key = e.key()  
         if (key == QtCore.Qt.Key_Left):      
-            self._rows[self._selectedRow].slideTiles(True)
+            self._rows[0].slideTiles(True)
             
         elif (key == QtCore.Qt.Key_Right):
-            self._rows[self._selectedRow].slideTiles(False) 
+            self._rows[0].slideTiles(False) 
             
         elif (key == QtCore.Qt.Key_Down):
             if (self._selectedRow > 0):
-                self._rows[self._selectedRow].showFrame(False)
-                self.slideRow(True)
                 self._selectedRow -= 1
-                self._rows[self._selectedRow].showFrame(True)
+                self.slideRow(True)          
             
         elif (key == QtCore.Qt.Key_Up):
-            if (self._selectedRow < (len(self._rows) - 1)):
-                self._rows[self._selectedRow].showFrame(False)            
+            if (self._selectedRow < (len(self._headers) - 1)):                            
                 self._selectedRow += 1
                 self.slideRow(False)                  
-                self._rows[self._selectedRow].showFrame(True)
+                
       
     ########################################################
     # Slides moves the tiles
@@ -106,6 +95,13 @@ class MainWindow(QtWidgets.QWidget):
         if self._animationDone != True:
             return
           
+        self._moveDown = moveDown 
+        
+        if moveDown:
+            self._newGeometry = self._rows[0].geometry()  
+        else:
+            self._newGeometry = self._rows[-1].geometry()
+                                        
         group = QtCore.QParallelAnimationGroup()
                 
         for row in self._rows:
@@ -116,19 +112,42 @@ class MainWindow(QtWidgets.QWidget):
             height = y2-y     
                
             animation.setStartValue(rect)
-            if (moveDown == True):
-                rect.moveTop(y + (height + self._rowSpacing))
+            if (moveDown == True):                
+                rect.moveTop(y + (height + self._rowSpacing))                
             else:
-                rect.moveTop(y - (height + self._rowSpacing))
+                rect.moveTop(y - (height + self._rowSpacing))                
                       
             animation.setEndValue(rect)
             group.addAnimation(animation)
         
         self._animationDone = False
+        group.finished.connect(self.animationFinished)        
         group.start()
-        group.finished.connect(self.animationFinished)
         
         self.group = group
+               
+        
+        self._rows[0].showFrame(False)        
+        if self._moveDown:
+            self._rows.pop(-1)
+            count = self._romSource.getNumRoms(self._headers[self._selectedRow])                
+            row = TileRowWidget(1, 3, count, self._romSource, self._headers[self._selectedRow])
+            row.setGeometry(self._newGeometry)
+            row.setParent(self)
+            row.initialize()                        
+            self._rows.insert(0, row)            
+        else:
+            self._rows.pop(0)
+            count = self._romSource.getNumRoms(self._headers[self._selectedRow+1])
+            row = TileRowWidget(1, 3, count, self._romSource, self._headers[self._selectedRow+1])
+            row.setGeometry(self._newGeometry)            
+            row.setParent(self)            
+            row.initialize()           
+             
+            self._rows.append(row)
+            
+        self._rows[0].showFrame(True)
+        print("there are %d row" % len(self._rows))
 
     #########################################################
     # Signal for when the animation is finished and 
@@ -136,5 +155,4 @@ class MainWindow(QtWidgets.QWidget):
     #########################################################
     def animationFinished(self):
         self._animationDone = True
-        
-               
+                

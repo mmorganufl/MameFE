@@ -2,8 +2,8 @@ from PyQt5 import QtGui, QtWidgets, QtCore
 from mame import TileWidget
 
 class TileRowWidget(QtWidgets.QWidget):
-    def __init__(self, startIndex, visibleCount, totalCount, source, filter):
-        super(TileRowWidget, self).__init__()
+    def __init__(self, startIndex, visibleCount, totalCount, source, filter):        
+        super(TileRowWidget, self).__init__()        
         self._animationDone = True
         self._visibleCount = visibleCount
         self._totalCount = totalCount
@@ -20,7 +20,7 @@ class TileRowWidget(QtWidgets.QWidget):
     def initialize(self):        
         self._width = self.size().width()
         self._height = self.size().height()
-        
+                
         self._tileWidth = int((self._width * .8) / self._visibleCount)
         self._tileHeight = int(((self._tileWidth) * 3 / 4)) # 4 x 3 ratio
         self._tileSpacing = int((self._width * .2) / (self._visibleCount + 1))    
@@ -28,7 +28,7 @@ class TileRowWidget(QtWidgets.QWidget):
         self._label = QtWidgets.QLabel(self)
         self._label.setGeometry(QtCore.QRect(self._tileSpacing, 0, self._width, self._height * .2))
         self._label.setText("<font color='white'>" + str(self._filter) + "</font>");
-        self._label.setFont(QtGui.QFont("Arial", .11 * self._height, QtGui.QFont.Bold))
+        self._label.setFont(QtGui.QFont("Helvetica", .11 * self._height, QtGui.QFont.Bold))
         self._label.setScaledContents(True)
         self._label.setAlignment(QtCore.Qt.AlignTop)        
     
@@ -36,7 +36,7 @@ class TileRowWidget(QtWidgets.QWidget):
         for x in range(0, len(self._ROMs)):
             tile = TileWidget.TileWidget(self._ROMs[x].ImagePath())   
             tile.setParent(self)
-            tile.setGeometry(QtCore.QRect(self._tileSpacing + (self._tileSpacing + self._tileWidth) * (x-1), self._height * .20, self._tileWidth, self._tileHeight))            
+            tile.setGeometry(QtCore.QRect(self._tileSpacing + (self._tileSpacing + self._tileWidth) * (x-1), self._height * .20, self._tileWidth, self._tileHeight))                        
             self._tiles.append(tile)   
             
         self._frame = QtWidgets.QFrame()
@@ -47,11 +47,10 @@ class TileRowWidget(QtWidgets.QWidget):
         self._frame.hide()       
             
     def paintEvent(self, e):
+        QtWidgets.QWidget.paintEvent(self, e)
         palette = self.palette()
         palette.setColor(self.backgroundRole(), QtCore.Qt.black)
-        self.setPalette(palette)         
-                     
-        QtWidgets.QWidget.paintEvent(self, e)
+        self.setPalette(palette)          
         
     def showFrame(self, show):
         if (show == True):
@@ -95,9 +94,9 @@ class TileRowWidget(QtWidgets.QWidget):
         self._moveRight = moveRight
         
         group.start()
-        group.finished.connect(self.animationFinished)
-        
         self.group = group
+        group.finished.connect(self.animationFinished)       
+        
          
     #########################################################
     # Signal for when the animation is finished and 
