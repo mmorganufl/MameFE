@@ -2,8 +2,8 @@ from PyQt5 import QtGui, QtWidgets, QtCore
 from mame import TileWidget
 
 class TileRowWidget(QtWidgets.QWidget):
-    def __init__(self, startIndex, visibleCount, totalCount, source, filter):        
-        super(TileRowWidget, self).__init__()        
+    def __init__(self, parent, startIndex, visibleCount, totalCount, source, filter):        
+        super(TileRowWidget, self).__init__(parent)        
         self._animationDone = True
         self._visibleCount = visibleCount
         self._totalCount = totalCount
@@ -34,7 +34,7 @@ class TileRowWidget(QtWidgets.QWidget):
     
         self._tiles = list()
         for x in range(0, len(self._ROMs)):
-            tile = TileWidget.TileWidget(self._ROMs[x].ImagePath())   
+            tile = TileWidget.TileWidget(self, self._ROMs[x].ImagePath())   
             tile.setParent(self)
             tile.setGeometry(QtCore.QRect(self._tileSpacing + (self._tileSpacing + self._tileWidth) * (x-1), self._height * .20, self._tileWidth, self._tileHeight))                        
             self._tiles.append(tile)   
@@ -106,14 +106,17 @@ class TileRowWidget(QtWidgets.QWidget):
         self._animationDone = True
         self._loadRoms()
         if self._moveRight:           
-            tile = self._tiles.pop(-1)            
-            tile.setGeometry(self._newGeometry)
-            tile.setImage(self._ROMs[0].ImagePath())
+            self._tiles.pop(-1)
+            tile = TileWidget.TileWidget(self, self._ROMs[0].ImagePath())  
+            tile.setParent(self)       
+            tile.setGeometry(self._newGeometry)            
             self._tiles.insert(0, tile)
                          
         else:            
-            tile = self._tiles.pop(0)            
-            tile.setGeometry(self._newGeometry)
-            tile.setImage(self._ROMs[-1].ImagePath())
+            self._tiles.pop(0)
+            tile = TileWidget.TileWidget(self, self._ROMs[-1].ImagePath())  
+            tile.setParent(self)           
+            tile.setGeometry(self._newGeometry)            
             self._tiles.append(tile)   
-        
+                
+        tile.show()

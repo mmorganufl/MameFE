@@ -53,15 +53,15 @@ class MainWindow(QtWidgets.QWidget):
         
               
         self._headers = self._romSource.getHeaders(0, 50)        
-        numRows = min(3, len(self._headers))
+        numRows = min(4, len(self._headers))
                 
         for i in range(0, numRows):
-            count = self._romSource.getNumRoms(self._headers[i])
-            row = TileRowWidget(1, 3, count, self._romSource, self._headers[i])
-            row.setGeometry(QtCore.QRect(0, bannerHeight + self._rowSpacing * i + self._rowHeight * i, width, self._rowHeight))
+            count = self._romSource.getNumRoms(self._headers[(i-1) % len(self._headers)])
+            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(i-1) % len(self._headers)])
+            row.setGeometry(QtCore.QRect(0, bannerHeight + self._rowSpacing * (i-1) + self._rowHeight * (i-1), width, self._rowHeight))
             row.setParent(self)
             row.initialize()
-            row.showFrame(i == 0)
+            row.showFrame(i == 1)
             row.lower()
             self._rows.append(row)
         
@@ -71,22 +71,20 @@ class MainWindow(QtWidgets.QWidget):
     def keyPressEvent(self, e):
         key = e.key()  
         if (key == QtCore.Qt.Key_Left):      
-            self._rows[0].slideTiles(True)
+            self._rows[1].slideTiles(True)
             
         elif (key == QtCore.Qt.Key_Right):
-            self._rows[0].slideTiles(False) 
+            self._rows[1].slideTiles(False) 
             
-        elif (key == QtCore.Qt.Key_Down):
-            if (self._selectedRow > 0):
-                self._selectedRow -= 1
-                self.slideRow(True)          
+        elif (key == QtCore.Qt.Key_Down):            
+            self._selectedRow -= 1
+            self.slideRow(True)          
             
-        elif (key == QtCore.Qt.Key_Up):
-            if (self._selectedRow < (len(self._headers) - 1)):                            
-                self._selectedRow += 1
-                self.slideRow(False)                  
+        elif (key == QtCore.Qt.Key_Up):                                        
+            self._selectedRow += 1
+            self.slideRow(False)                  
                 
-      
+        
     ########################################################
     # Slides moves the tiles
     # @param moveDown - Set True to slide the rows down
@@ -127,27 +125,31 @@ class MainWindow(QtWidgets.QWidget):
         self.group = group
                
         
-        self._rows[0].showFrame(False)        
+        self._rows[1].showFrame(False)        
         if self._moveDown:
             self._rows.pop(-1)
-            count = self._romSource.getNumRoms(self._headers[self._selectedRow])                
-            row = TileRowWidget(1, 3, count, self._romSource, self._headers[self._selectedRow])
+            count = self._romSource.getNumRoms(self._headers[(self._selectedRow-1)  % len(self._headers)])                
+            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(self._selectedRow-1) % len(self._headers)])
             row.setGeometry(self._newGeometry)
             row.setParent(self)
             row.initialize()                        
             self._rows.insert(0, row)            
-        else:
-            self._rows.pop(0)
-            count = self._romSource.getNumRoms(self._headers[self._selectedRow+1])
-            row = TileRowWidget(1, 3, count, self._romSource, self._headers[self._selectedRow+1])
+        else:            
+            self._rows.pop(0)            
+            count = self._romSource.getNumRoms(self._headers[(self._selectedRow+3) % len(self._headers)])
+            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(self._selectedRow+3) % len(self._headers)])
             row.setGeometry(self._newGeometry)            
             row.setParent(self)            
             row.initialize()           
              
             self._rows.append(row)
             
-        self._rows[0].showFrame(True)
-        print("there are %d row" % len(self._rows))
+        row.show()
+        row.lower()
+        self.repaint()
+            
+        self._rows[1].showFrame(True)
+        
 
     #########################################################
     # Signal for when the animation is finished and 
@@ -155,4 +157,6 @@ class MainWindow(QtWidgets.QWidget):
     #########################################################
     def animationFinished(self):
         self._animationDone = True
+        
+
                 

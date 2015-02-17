@@ -1,9 +1,9 @@
 from PyQt5 import QtGui, QtWidgets, QtCore
 
 class TileWidget(QtWidgets.QWidget):
-    def __init__(self, imagePath=None):
-        super(TileWidget, self).__init__()
-        self.setImage(imagePath)
+    def __init__(self, parent, imagePath=None):
+        super(TileWidget, self).__init__(parent)
+        self.setImage(imagePath)        
         
     def paintEvent(self, e):
         palette = self.palette()
@@ -19,7 +19,9 @@ class TileWidget(QtWidgets.QWidget):
         
     def setImage(self, imagePath):
         if (imagePath is not None):
+            self._imagePath = imagePath
             self._image = QtGui.QPixmap(imagePath)
         else:
             self._image = None
-        self.update()
+        self.update()     
+           
