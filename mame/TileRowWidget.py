@@ -16,13 +16,16 @@ class TileRowWidget(QtWidgets.QWidget):
     def _loadRoms(self):
         startIndex = (self._currentIndex - 2) % self._totalCount        
         self._ROMs = self._source.getRoms(self._filter, startIndex, self._visibleCount + 2)
-        
+     
+    def GetSelectedRom(self):
+        return self._ROMs[2]
+       
     def initialize(self):        
         self._width = self.size().width()
         self._height = self.size().height()
                 
         self._tileWidth = int((self._width * .8) / self._visibleCount)
-        self._tileHeight = int(((self._tileWidth) * 3 / 4)) # 4 x 3 ratio
+        self._tileHeight = self._height * .8
         self._tileSpacing = int((self._width * .2) / (self._visibleCount + 1))    
         
         self._label = QtWidgets.QLabel(self)

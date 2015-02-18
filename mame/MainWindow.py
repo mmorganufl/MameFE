@@ -2,30 +2,48 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from mame.TileRowWidget import TileRowWidget
 from mame.RomSource import GenreRomSource
 from mame.Configuration import Configuration
+import sys
 
 class MainWindow(QtWidgets.QWidget):
-
+    """ The main window of the front end. """
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
     
         # State variables
-        self._selectedRow = 0    
+        self._selectedRow   = 0    
         self._animationDone = True
-        self._rows = list()
-        self._rowSelection = dict()
+        self._rows          = list()
+        self._totalNumRows  = 0
+        self._rowSelection  = dict()
+        self._config        = Configuration("mamefe.ini");
+        self._romSource     = GenreRomSource(self._config)        
         
+    def showFullScreen(self):
+        QtWidgets.QWidget.showFullScreen(self)
         # Set up initial window
-        self.setGeometry(QtCore.QRect(100, 100, 1024, 768))
+        #self.setGeometry(QtCore.QRect(100, 100, 1024, 768))        
         
         # Get the window dimensions
         height = self.size().height()
         width = self.size().width()
         
+        if (width * 3) == (height * 4):  # a 4:3 display            
+            self._numColsToDisplay = 3
+            self._totalNumRowsToDisplay = 2
+        else: # assume widescreen, 16:9
+            self._numColsToDisplay = 5
+            self._totalNumRowsToDisplay = 3 
+            
         # Set up the row dimensions
-        # 11 + 2(rows) * 37 + 3(spaces) * 5 = 100
-        bannerHeight = int(height * .11)
-        self._rowHeight = int(height * .37)
+        # The banner will take the upper 10% of the screen
+        bannerHeight = int(height * .10)
+        
+        # The spaces between each row will each take 5% of the screen
+        # There will be n+1 row spaces 
         self._rowSpacing = int(height * .05)
+        
+        # The remaining real estate is divided among the rows
+        self._rowHeight = (int(height * ((1 - .05 * (self._totalNumRowsToDisplay + 2)) / self._totalNumRowsToDisplay)))        
         
         # Set the background color to gray-blue
         p = self.palette()        
@@ -46,27 +64,24 @@ class MainWindow(QtWidgets.QWidget):
         # Set the banner image
         self._bannerImage = QtGui.QPixmap("images/marquee2.jpg").scaledToHeight(bannerHeight, mode=QtCore.Qt.SmoothTransformation)
         self._bannerLabel.setPixmap(self._bannerImage)
+        self._bannerLabel.show()
         
-        self._config = Configuration("mamefe.ini");
-        self._romSource = GenreRomSource(self._config)
-        self._numRows = self._romSource.getNumRows(); 
-        
+        self._totalNumRows = self._romSource.getNumRows();         
               
-        self._headers = self._romSource.getHeaders(0, 50)        
-        numRows = min(4, len(self._headers))
+        self._headers = self._romSource.getHeaders(0, -1)        
+        numRows = min(4, self._totalNumRows)
                 
         for i in range(0, numRows):
-            count = self._romSource.getNumRoms(self._headers[(i-1) % len(self._headers)])
-            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(i-1) % len(self._headers)])
+            count = self._romSource.getNumRoms(self._headers[(i-1) % self._totalNumRows])
+            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(i-1) % self._totalNumRows])
             row.setGeometry(QtCore.QRect(0, bannerHeight + self._rowSpacing * (i-1) + self._rowHeight * (i-1), width, self._rowHeight))
             row.setParent(self)
             row.initialize()
             row.showFrame(i == 1)
             row.lower()
             self._rows.append(row)
-        
-        self._bannerLabel.raise_()
-                       
+            row.show()
+        self._bannerLabel.raise_()                       
    
     def keyPressEvent(self, e):
         key = e.key()  
@@ -84,7 +99,10 @@ class MainWindow(QtWidgets.QWidget):
             self._selectedRow += 1
             self.slideRow(False)                  
                 
-        
+        elif (key == QtCore.Qt.Key_Escape):
+            sys.exit(0)            
+            
+            
     ########################################################
     # Slides moves the tiles
     # @param moveDown - Set True to slide the rows down
@@ -128,16 +146,16 @@ class MainWindow(QtWidgets.QWidget):
         self._rows[1].showFrame(False)        
         if self._moveDown:
             self._rows.pop(-1)
-            count = self._romSource.getNumRoms(self._headers[(self._selectedRow-1)  % len(self._headers)])                
-            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(self._selectedRow-1) % len(self._headers)])
+            count = self._romSource.getNumRoms(self._headers[(self._selectedRow-1)  % self._totalNumRows])                
+            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(self._selectedRow-1) % self._totalNumRows])
             row.setGeometry(self._newGeometry)
             row.setParent(self)
             row.initialize()                        
             self._rows.insert(0, row)            
         else:            
             self._rows.pop(0)            
-            count = self._romSource.getNumRoms(self._headers[(self._selectedRow+3) % len(self._headers)])
-            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(self._selectedRow+3) % len(self._headers)])
+            count = self._romSource.getNumRoms(self._headers[(self._selectedRow+3) % self._totalNumRows])
+            row = TileRowWidget(self, 1, 3, count, self._romSource, self._headers[(self._selectedRow+3) % self._totalNumRows])
             row.setGeometry(self._newGeometry)            
             row.setParent(self)            
             row.initialize()           
