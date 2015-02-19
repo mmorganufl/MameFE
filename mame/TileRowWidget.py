@@ -20,32 +20,47 @@ class TileRowWidget(QtWidgets.QWidget):
     def GetSelectedRom(self):
         return self._ROMs[2]
        
-    def initialize(self):        
+    def initialize(self):
+        LABEL_PERCENTAGE = .2
+        TILE_HEIGHT_PERCENTAGE = 1 - LABEL_PERCENTAGE
+        TILE_WIDTH_PERCENTAGE = .8
+        TILE_SPACE_PERCENTAGE = 1 - TILE_WIDTH_PERCENTAGE
+        
         self._width = self.size().width()
         self._height = self.size().height()
                 
-        self._tileWidth = int((self._width * .8) / self._visibleCount)
-        self._tileHeight = self._height * .8
-        self._tileSpacing = int((self._width * .2) / (self._visibleCount + 1))    
+        self._tileWidth = int((self._width * TILE_WIDTH_PERCENTAGE) / self._visibleCount)
+        self._tileHeight = self._height * TILE_HEIGHT_PERCENTAGE
+        self._tileSpacing = int((self._width * TILE_SPACE_PERCENTAGE) / (self._visibleCount + 1))    
         
         self._label = QtWidgets.QLabel(self)
-        self._label.setGeometry(QtCore.QRect(self._tileSpacing, 0, self._width, self._height * .2))
+        self._label.setGeometry(QtCore.QRect(self._tileSpacing, 0, self._width, self._height * LABEL_PERCENTAGE))
         self._label.setText("<font color='white'>" + str(self._filter) + "</font>");
         self._label.setFont(QtGui.QFont("Helvetica", .11 * self._height, QtGui.QFont.Bold))
         self._label.setScaledContents(True)
         self._label.setAlignment(QtCore.Qt.AlignTop)        
     
         self._tiles = list()
-        for x in range(0, len(self._ROMs)):
-            tile = TileWidget.TileWidget(self, self._ROMs[x].ImagePath())   
-            tile.setParent(self)
-            tile.setGeometry(QtCore.QRect(self._tileSpacing + (self._tileSpacing + self._tileWidth) * (x-1), self._height * .20, self._tileWidth, self._tileHeight))                        
+        for i in range(0, len(self._ROMs)):
+            tile = TileWidget.TileWidget(self, self._ROMs[i].ImagePath())   
+            tile.setParent(self)            
+            x = self._tileSpacing + (self._tileSpacing + self._tileWidth) * (i-1)
+            y = self._height * LABEL_PERCENTAGE  # Lowered to make room for the label
+                    
+            tile.setGeometry(QtCore.QRect(x, y, self._tileWidth, self._tileHeight))                        
             self._tiles.append(tile)   
             
         self._frame = QtWidgets.QFrame()
         self._frame.setParent(self)
-        self._frame.setFrameStyle(QtWidgets.QFrame.Box)        
-        self._frame.setGeometry(QtCore.QRect(self._tileSpacing - 6 + (self._tileSpacing + self._tileWidth), self._height * .20 - 6, self._tileWidth + 12, self._tileHeight + 12))
+        self._frame.setFrameStyle(QtWidgets.QFrame.Box)
+        
+        FRAME_WIDTH = 5
+        centerTileIdx = int(self._visibleCount / 2)
+        print("center tile idx: %d" % centerTileIdx)
+        x = self._tileSpacing - FRAME_WIDTH + ((self._tileSpacing + self._tileWidth) * centerTileIdx)
+        y = self._height * LABEL_PERCENTAGE - FRAME_WIDTH
+        
+        self._frame.setGeometry(QtCore.QRect(x, y, self._tileWidth + (FRAME_WIDTH * 2), self._tileHeight + FRAME_WIDTH))
         self._frame.setStyleSheet("QFrame { border: 5px solid white;}") 
         self._frame.hide()       
             
@@ -57,7 +72,7 @@ class TileRowWidget(QtWidgets.QWidget):
         
     def showFrame(self, show):
         if (show == True):
-            self._frame.show()
+            self._frame.show()            
         else:
             self._frame.hide()
             
