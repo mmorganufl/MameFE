@@ -3,22 +3,24 @@ from mame import TileWidget
 
 class TileRowWidget(QtWidgets.QWidget):
     def __init__(self, parent, startIndex, visibleCount, totalCount, source, filter):        
-        super(TileRowWidget, self).__init__(parent)        
-        self._animationDone = True
-        self._visibleCount = visibleCount
-        self._totalCount = totalCount
-        self._source = source
-        self._filter = filter
-        self._currentIndex = startIndex
-        self._source = source
-        self._loadRoms()
+        super(TileRowWidget, self).__init__(parent)
         
-    def _loadRoms(self):
-        startIndex = (self._currentIndex - 2) % self._totalCount        
-        self._ROMs = self._source.getRoms(self._filter, startIndex, self._visibleCount + 2)
+        self._currentIndex  = startIndex  
+        self._visibleCount  = visibleCount
+        self._totalRomCount = totalCount
+        self._romSource     = source
+        self._filter        = filter        
+        self._animationDone = True
+                
+        self.LoadRoms()
+        
+    def LoadRoms(self):
+        startIndex = (self._currentIndex - 2) % self._totalRomCount        
+        self._ROMs = self._romSource.getRoms(self._filter, startIndex, self._visibleCount + 2)
+        self._selectedRom = self._ROMs[int(self._visibleCount / 2) + 1] # visible count must be odd
      
     def GetSelectedRom(self):
-        return self._ROMs[2]
+        return self._selectedRom
        
     def initialize(self):
         LABEL_PERCENTAGE = .2
@@ -34,34 +36,43 @@ class TileRowWidget(QtWidgets.QWidget):
         self._tileSpacing = int((self._width * TILE_SPACE_PERCENTAGE) / (self._visibleCount + 1))    
         
         self._label = QtWidgets.QLabel(self)
-        self._label.setGeometry(QtCore.QRect(self._tileSpacing, 0, self._width, self._height * LABEL_PERCENTAGE))
+        self._label.setGeometry(QtCore.QRect(self._tileSpacing, 0, self._width * .5, self._height * LABEL_PERCENTAGE))
         self._label.setText("<font color='white'>" + str(self._filter) + "</font>");
-        self._label.setFont(QtGui.QFont("Helvetica", .11 * self._height, QtGui.QFont.Bold))
+        self._label.setFont(QtGui.QFont("DejaVu Sans", .11 * self._height, QtGui.QFont.Bold))
         self._label.setScaledContents(True)
         self._label.setAlignment(QtCore.Qt.AlignTop)        
     
+        self._countLabel = QtWidgets.QLabel(self)
+        self._countLabel.setGeometry(QtCore.QRect(self._width * .5, 0, self._width * .5 - self._tileSpacing, self._height * LABEL_PERCENTAGE))
+        self._countLabel.setFont(QtGui.QFont("Arial", .07 * self._height))
+        self._countLabel.setScaledContents(True)
+        self._countLabel.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignRight)
+        self._countLabel.hide()
+        
         self._tiles = list()
         for i in range(0, len(self._ROMs)):
-            tile = TileWidget.TileWidget(self, self._ROMs[i].ImagePath())   
+            tile = TileWidget.TileWidget(self, self._ROMs[i].ImagePath(), self._ROMs[i].GameName())   
             tile.setParent(self)            
             x = self._tileSpacing + (self._tileSpacing + self._tileWidth) * (i-1)
             y = self._height * LABEL_PERCENTAGE  # Lowered to make room for the label
                     
             tile.setGeometry(QtCore.QRect(x, y, self._tileWidth, self._tileHeight))                        
             self._tiles.append(tile)   
-            
-        self._frame = QtWidgets.QFrame()
+           
+        
+        self._frame = QtWidgets.QFrame()        
         self._frame.setParent(self)
-        self._frame.setFrameStyle(QtWidgets.QFrame.Box)
+        self._frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         
         FRAME_WIDTH = 5
+        
         centerTileIdx = int(self._visibleCount / 2)
         print("center tile idx: %d" % centerTileIdx)
         x = self._tileSpacing - FRAME_WIDTH + ((self._tileSpacing + self._tileWidth) * centerTileIdx)
         y = self._height * LABEL_PERCENTAGE - FRAME_WIDTH
         
         self._frame.setGeometry(QtCore.QRect(x, y, self._tileWidth + (FRAME_WIDTH * 2), self._tileHeight + FRAME_WIDTH))
-        self._frame.setStyleSheet("QFrame { border: 5px solid white;}") 
+        self._frame.setStyleSheet("QFrame { border: 3px solid white;}") 
         self._frame.hide()       
             
     def paintEvent(self, e):
@@ -72,10 +83,17 @@ class TileRowWidget(QtWidgets.QWidget):
         
     def showFrame(self, show):
         if (show == True):
-            self._frame.show()            
+            self._frame.show()      
+            self.updateCountLabel()                  
         else:
             self._frame.hide()
-            
+            self._countLabel.hide()
+                        
+    def updateCountLabel(self):
+        indexStr = "<font color='white'>" + str(self._currentIndex % self._totalRomCount + 1)
+        self._countLabel.setText(indexStr + " | " + str(self._totalRomCount)) 
+        self._countLabel.show()
+        
     ###############################
     # Slides moves the tiles
     ###############################
@@ -91,7 +109,7 @@ class TileRowWidget(QtWidgets.QWidget):
             self._newGeometry = self._tiles[-1].geometry()
             self._currentIndex += 1
 
-        self._currentIndex %= self._totalCount
+        self._currentIndex %= self._totalRomCount
           
         group = QtCore.QParallelAnimationGroup()        
             
@@ -113,7 +131,8 @@ class TileRowWidget(QtWidgets.QWidget):
         
         group.start()
         self.group = group
-        group.finished.connect(self.animationFinished)       
+        group.finished.connect(self.animationFinished)
+        self.updateCountLabel()       
         
          
     #########################################################
@@ -121,20 +140,22 @@ class TileRowWidget(QtWidgets.QWidget):
     # another animation can start
     #########################################################
     def animationFinished(self):
-        self._animationDone = True
-        self._loadRoms()
+        self._animationDone = True        
+        self.LoadRoms()
         if self._moveRight:           
             self._tiles.pop(-1)
-            tile = TileWidget.TileWidget(self, self._ROMs[0].ImagePath())  
+            tile = TileWidget.TileWidget(self, self._ROMs[0].ImagePath(), self._ROMs[0].GameName())  
             tile.setParent(self)       
             tile.setGeometry(self._newGeometry)            
             self._tiles.insert(0, tile)
+            
                          
         else:            
             self._tiles.pop(0)
-            tile = TileWidget.TileWidget(self, self._ROMs[-1].ImagePath())  
+            tile = TileWidget.TileWidget(self, self._ROMs[-1].ImagePath(), self._ROMs[-1].GameName())
             tile.setParent(self)           
             tile.setGeometry(self._newGeometry)            
-            self._tiles.append(tile)   
-                
+            self._tiles.append(tile)  
+                        
         tile.show()
+        
