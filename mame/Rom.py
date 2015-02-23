@@ -8,7 +8,8 @@ class ROM(object):
         self._gameName = params[1]
         self._description = params[2]
         self._year = params[3]
-        self._imagePath = params[4]
+        self._developer = params[4]
+        self._imagePath = params[5]
         
     def RomName(self):
         return self._romName

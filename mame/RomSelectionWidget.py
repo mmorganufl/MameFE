@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 from mame.TileRowWidget import TileRowWidget
-from mame.RomSource import RomSource, GenreRomSource, YearRomSource
+from mame.RomSource import RomSource
 from mame.Configuration import Configuration
 import sys
 
@@ -18,8 +18,9 @@ class RomSelectionWidget(QtWidgets.QWidget):
         self._romSources     = list()
         
         RomSource.init(self._config)
-        self._romSources.append(GenreRomSource())
-        self._romSources.append(YearRomSource())
+        self._romSources.append(RomSource("genre"))
+        self._romSources.append(RomSource("year"))
+        self._romSources.append(RomSource("developer"))        
         self._romSourceIndex = 0
         self._animationDone = True
           
