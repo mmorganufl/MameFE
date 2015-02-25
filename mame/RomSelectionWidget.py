@@ -14,7 +14,7 @@ class RomSelectionWidget(QtGui.QWidget):
         self._rows          = list()
         self._totalNumRows  = 0
         self._rowSelection  = dict()
-        self._config        = Configuration("/home/pi/MameFE/mame/mamefe.ini");
+        self._config        = Configuration("mamefe.ini");
         self._romSources     = list()
         
         RomSource.init(self._config)
@@ -25,12 +25,15 @@ class RomSelectionWidget(QtGui.QWidget):
         self._animationDone = True
           
         self._romSource = self._romSources[self._romSourceIndex]
-        self._romSource.validateDatabase()      
+        self._romSource.validateDatabase()            
         
-    #def showFullScreen(self):
+        
+    def showFullScreen(self):
         QtGui.QWidget.showFullScreen(self)
         # Set up initial window
-        self.setGeometry(QtCore.QRect(100, 100, 1024, 768))        
+        #self.setGeometry(QtCore.QRect(0, 0, 1024, 768))        
+        #self.setGeometry(QtCore.QRect(0, 0, QtGui.QApplication.desktop().size().width(), QtGui.QApplication.desktop().size().height()))
+        self.setGeometry(QtGui.QApplication.desktop().screenGeometry(0))
         self.InitializeScreen()
     
     def InitializeScreen(self):

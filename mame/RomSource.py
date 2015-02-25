@@ -9,6 +9,7 @@ class RomSource(object):
     @staticmethod
     def init(config):    
         RomSource._config = config
+        print("connecting to %s" % config.DatabasePath())
         RomSource._db = sqlite3.connect(config.DatabasePath())
         
     def __init__(self, type):
@@ -35,6 +36,7 @@ class RomSource(object):
         
     def getNumRows(self):
         query = "SELECT COUNT(DISTINCT %s) FROM (SELECT %s FROM games WHERE hasRom=1);" % (self._type, self._type)
+        print("Query = %s" % query)
         cursor = RomSource._db.execute(query)
         result = cursor.fetchall()
         return result[0][0];
