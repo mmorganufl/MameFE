@@ -1,7 +1,7 @@
-from PyQt5 import QtGui, QtWidgets, QtCore
+from PyQt4 import QtGui, QtCore
 import os
 
-class TileWidget(QtWidgets.QWidget):
+class TileWidget(QtGui.QWidget):
     def __init__(self, parent, imagePath=None, gameName=None):
         super(TileWidget, self).__init__(parent)
         self.setImage(imagePath)
@@ -39,7 +39,7 @@ class TileWidget(QtWidgets.QWidget):
         #    f.setPointSizeF(f.pointSizeF()*factor)  
         #p.setFont(f)      
         #p.drawText(titleRect, QtCore.Qt.AlignCenter, self._gameName)
-        QtWidgets.QWidget.paintEvent(self, e)
+        QtGui.QWidget.paintEvent(self, e)
         p.end()
         
     def setImage(self, imagePath):

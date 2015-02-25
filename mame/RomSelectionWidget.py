@@ -1,20 +1,20 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
-from mame.TileRowWidget import TileRowWidget
-from mame.RomSource import RomSource
-from mame.Configuration import Configuration
+from PyQt4 import QtCore, QtGui
+from TileRowWidget import TileRowWidget
+from RomSource import RomSource
+from Configuration import Configuration
 import sys
 
-class RomSelectionWidget(QtWidgets.QWidget):
+class RomSelectionWidget(QtGui.QWidget):
     """ The main window of the front end. """
     def __init__(self):
-        QtWidgets.QWidget.__init__(self)
+        QtGui.QWidget.__init__(self)
     
         # State variables
         self._selectedRow   = 0
         self._rows          = list()
         self._totalNumRows  = 0
         self._rowSelection  = dict()
-        self._config        = Configuration("mamefe.ini");
+        self._config        = Configuration("/home/pi/MameFE/mame/mamefe.ini");
         self._romSources     = list()
         
         RomSource.init(self._config)
@@ -27,10 +27,10 @@ class RomSelectionWidget(QtWidgets.QWidget):
         self._romSource = self._romSources[self._romSourceIndex]
         self._romSource.validateDatabase()      
         
-    def showFullScreen(self):
-        QtWidgets.QWidget.showFullScreen(self)
+    #def showFullScreen(self):
+        QtGui.QWidget.showFullScreen(self)
         # Set up initial window
-        #self.setGeometry(QtCore.QRect(100, 100, 1024, 768))        
+        self.setGeometry(QtCore.QRect(100, 100, 1024, 768))        
         self.InitializeScreen()
     
     def InitializeScreen(self):
@@ -69,7 +69,7 @@ class RomSelectionWidget(QtWidgets.QWidget):
         self.setPalette(p)
             
         # Create the banner
-        self._bannerLabel = QtWidgets.QLabel(self)
+        self._bannerLabel = QtGui.QLabel(self)
         self._bannerLabel.setGeometry(QtCore.QRect(0, 0, width, self._bannerHeight))
         self._bannerLabel.setAutoFillBackground(True)
         self._bannerLabel.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
@@ -97,7 +97,7 @@ class RomSelectionWidget(QtWidgets.QWidget):
         for row in self._rows:
             row.hide()
             
-        self._rows.clear()
+        self._rows = list()
         for i in range(0, numRows):
             count = self._romSource.getNumRoms(self._headers[(i-1) % self._totalNumRows])
             row = TileRowWidget(self, 0, self._numColsToDisplay, count, self._romSource, self._headers[(i-1) % self._totalNumRows])
@@ -155,15 +155,19 @@ class RomSelectionWidget(QtWidgets.QWidget):
         self._moveDown = moveDown 
         
         if moveDown:
+            self._rows[0].show()
+            self._rows[-1].hide()
             self._newGeometry = self._rows[0].geometry()  
         else:
+            self._rows[-1].show()
+            self._rows[0].hide()
             self._newGeometry = self._rows[-1].geometry()
                                         
         group = QtCore.QParallelAnimationGroup()
                 
         for row in self._rows:
             animation = QtCore.QPropertyAnimation(row, "geometry")
-            animation.setDuration(100)
+            animation.setDuration(500)
             rect = row.geometry() 
             x, y, x2, y2 = rect.getCoords()            
             height = y2-y     
@@ -181,8 +185,13 @@ class RomSelectionWidget(QtWidgets.QWidget):
         group.finished.connect(self.animationFinished)        
         group.start()
         
-        self.group = group               
-        
+        self.group = group
+
+    #########################################################
+    # Signal for when the animation is finished and 
+    # another animation can start
+    #########################################################
+    def animationFinished(self):
         self._rows[1].showFrame(False)        
         if self._moveDown:
             self._rows.pop(-1)
@@ -201,19 +210,12 @@ class RomSelectionWidget(QtWidgets.QWidget):
             row.initialize()           
              
             self._rows.append(row)
-            
-        row.show()
+           
+
         row.lower()
         self.repaint()
             
         self._rows[1].showFrame(True)
-        
-
-    #########################################################
-    # Signal for when the animation is finished and 
-    # another animation can start
-    #########################################################
-    def animationFinished(self):
         self._animationDone = True
         
 

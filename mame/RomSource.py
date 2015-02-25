@@ -1,5 +1,5 @@
 import sqlite3
-from mame.Rom import ROM
+from Rom import ROM
 import os
 
 class RomSource(object):
@@ -23,11 +23,13 @@ class RomSource(object):
         return roms
     
     def validateDatabase(self):
+        return
         cursor = RomSource._db.execute("SELECT filename from games;")
         result = cursor.fetchall()
-        for row in result:
+        for row in result:			
             fileName = row[0]
-            path = RomSource._config.RomPath() + "\\" + fileName + ".zip"
+            print("validating %s" % fileName)
+            path = RomSource._config.RomPath() + os.sep + fileName + ".zip"
             exists = os.path.isfile(path)
             RomSource._db.execute("UPDATE games SET hasRom=? WHERE fileName=?;", (exists, fileName))
         

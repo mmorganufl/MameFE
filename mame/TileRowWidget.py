@@ -1,7 +1,7 @@
-from PyQt5 import QtGui, QtWidgets, QtCore
-from mame import TileWidget
+from PyQt4 import QtGui, QtCore
+import TileWidget
 
-class TileRowWidget(QtWidgets.QWidget):
+class TileRowWidget(QtGui.QWidget):
     def __init__(self, parent, startIndex, visibleCount, totalCount, source, filter):        
         super(TileRowWidget, self).__init__(parent)
         
@@ -35,14 +35,14 @@ class TileRowWidget(QtWidgets.QWidget):
         self._tileHeight = self._height * TILE_HEIGHT_PERCENTAGE
         self._tileSpacing = int((self._width * TILE_SPACE_PERCENTAGE) / (self._visibleCount + 1))    
         
-        self._label = QtWidgets.QLabel(self)
+        self._label = QtGui.QLabel(self)
         self._label.setGeometry(QtCore.QRect(self._tileSpacing, 0, self._width * .5, self._height * LABEL_PERCENTAGE))
         self._label.setText("<font color='white'>" + str(self._filter) + "</font>");
         self._label.setFont(QtGui.QFont("DejaVu Sans", .11 * self._height, QtGui.QFont.Bold))
         self._label.setScaledContents(True)
         self._label.setAlignment(QtCore.Qt.AlignTop)        
     
-        self._countLabel = QtWidgets.QLabel(self)
+        self._countLabel = QtGui.QLabel(self)
         self._countLabel.setGeometry(QtCore.QRect(self._width * .5, 0, self._width * .5 - self._tileSpacing, self._height * LABEL_PERCENTAGE))
         self._countLabel.setFont(QtGui.QFont("Arial", .07 * self._height))
         self._countLabel.setScaledContents(True)
@@ -60,9 +60,9 @@ class TileRowWidget(QtWidgets.QWidget):
             self._tiles.append(tile)   
            
         
-        self._frame = QtWidgets.QFrame()        
+        self._frame = QtGui.QFrame()        
         self._frame.setParent(self)
-        self._frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self._frame.setFrameShape(QtGui.QFrame.StyledPanel)
         
         FRAME_WIDTH = 5
         
@@ -76,7 +76,7 @@ class TileRowWidget(QtWidgets.QWidget):
         self._frame.hide()       
             
     def paintEvent(self, e):
-        QtWidgets.QWidget.paintEvent(self, e)
+        QtGui.QWidget.paintEvent(self, e)
         palette = self.palette()
         palette.setColor(self.backgroundRole(), QtCore.Qt.black)
         self.setPalette(palette)          
@@ -115,7 +115,7 @@ class TileRowWidget(QtWidgets.QWidget):
             
         for tileIdx in range(0, len(self._tiles)):            
             animation = QtCore.QPropertyAnimation(self._tiles[tileIdx], "geometry")
-            animation.setDuration(100)
+            animation.setDuration(350)
             rect = self._tiles[tileIdx].geometry() 
             x, y, x2, y2 = rect.getCoords()        
             animation.setStartValue(rect)
